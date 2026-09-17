@@ -1,0 +1,53 @@
+# water-reminder bundle patch.
+#
+# Mounting this package inserts one plugin row. The defaults below are complete
+# on purpose: a user patch replaces the whole entry config, so restate every
+# field you want to keep when overriding one of them.
+#
+# Installing the bundle appends the package to the profile's
+# `dsh.profile.bundles`, and this layer mounts the row:
+#
+#   dsh plugin --profile web add /path/to/water_reminder
+#
+# If the profile's own cordis.patch.yml already has a `water-reminder` row,
+# delete it first: two live entries would each start a reminder timer and each
+# register the `/water/api` prefix route, and the duplicate route makes the
+# plugin fail to boot.
+- insert:
+    - id: water-reminder
+      name: '@dsh-plugin/water-reminder'
+      config:
+        # Whether the reminder loop runs at start-up. The panel and the
+        # `water_control` tool can toggle it at runtime without touching this.
+        enabled: true
+        # The random interval window, in minutes. Every reminder draws a fresh
+        # value from this band — the irregularity is the point, since a fixed
+        # metronome is what people learn to dismiss.
+        intervalMinMinutes: 40
+        intervalMaxMinutes: 60
+        # Daily intake goal and the volume recorded for one "cup".
+        dailyGoalMl: 2000
+        cupMl: 250
+        # How long `water_snooze` defers when no explicit delay is given.
+        snoozeMinutes: 5
+        # Hold reminders back inside this local-time window; the pending
+        # reminder is pushed to the window's end instead of firing.
+        quietHours:
+          enabled: false
+          from: '22:00'
+          to: '08:00'
+        # Delivery channels. `os` needs a subprocess provider (osascript on
+        # macOS, a WinRT toast on Windows, notify-send on Linux); `agent`
+        # injects one line into every live root session.
+        notify:
+          os: true
+          agent: true
+          sound: true
+        # Expose a short system-prompt section describing the reminder loop.
+        promptSection: true
+        # Register the embedded `hydration-coach` skill through ctx.skills, so
+        # the model gets the workflow with no filesystem skill root.
+        skill: true
+        # State file location. Defaults to $DSH_HOME/water-reminder.json, which
+        # keeps the intake log out of the repository.
+        # stateFile: /absolute/path/water-reminder.json

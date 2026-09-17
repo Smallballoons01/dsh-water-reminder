@@ -1,0 +1,6 @@
+node_modules/
+.DS_Store
+*.log
+# Local state written by a dev run that pointed DSH_HOME at the repo.
+water-reminder.json
+*.tmp
