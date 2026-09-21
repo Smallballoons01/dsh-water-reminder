@@ -8,8 +8,22 @@
     "deepseek-harness",
     "reminder",
     "hydration",
-    "health"
+    "health",
+    "agent-skill"
   ],
+  "author": "light",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Smallballoons01/dsh-water-reminder.git"
+  },
+  "homepage": "https://github.com/Smallballoons01/dsh-water-reminder#readme",
+  "bugs": {
+    "url": "https://github.com/Smallballoons01/dsh-water-reminder/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "type": "module",
   "main": "./index.js",
   "exports": {
@@ -32,7 +46,6 @@
     "README.md",
     "README.zh.md"
   ],
-  "license": "MIT",
   "scripts": {
     "test": "node --test",
     "skill": "node scripts/generate-skill.mjs",

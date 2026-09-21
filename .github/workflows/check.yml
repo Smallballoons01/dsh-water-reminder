@@ -1,0 +1,38 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: check (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # Deliberately no `npm install`: the package has zero runtime dependencies
+      # and its only packages are host-provided peers that are not on npm, so an
+      # install step would fail for reasons unrelated to the code under test.
+      # The plugin layers skip themselves when those peers are absent, which is
+      # expected — the remaining layers still run.
+
+      - name: 单元与集成测试
+        run: npm test
+
+      - name: 技能文件一致性
+        run: npm run skill:check
