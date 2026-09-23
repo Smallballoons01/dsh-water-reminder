@@ -104,19 +104,21 @@ The plugin has **zero runtime dependencies** — `@deepseek-ai/dsh-tools`, `dsh-
 friends are peer dependencies that the Harness supplies at runtime.
 
 Note, though, that **the versions this plugin is developed against are not published to npm** (npm's
-latest `@deepseek-ai/dsh-tools` is `0.0.1-rc.1`; this plugin targets `0.1.6-alpha.1`), so a fresh
-clone cannot `npm install` a working test environment. Pick one of three:
+latest `@deepseek-ai/dsh-tools` is `0.0.1-rc.1`; this plugin targets `0.1.2-alpha.3`), so a fresh
+clone cannot `npm install` a working test environment. The settings page and config hot reload
+require a Harness >= `0.1.2-alpha.3` host; on older hosts the plugin still runs on its boot-time
+config. Pick one of three:
 
 ```sh
 # 1) Run the dependency-free part only — works immediately after cloning
-npm test              # 35 pass / 2 skip, and each skip says why
+npm test              # 38 pass / 2 skip, and each skip says why
 
 # 2) Reuse the packages from an existing local Harness profile (fastest, offline)
 mkdir -p node_modules/@deepseek-ai
-for p in cordis dsh-llm dsh-tools dsh-settings dsh-skill dsh-system-prompt schemastery; do
+for p in cordis cosmokit dsh-llm dsh-tools dsh-settings dsh-skill dsh-system-prompt schemastery; do
   ln -sfn "$HOME/.dsh/profiles/node_modules/@deepseek-ai/$p" "node_modules/@deepseek-ai/$p"
 done
-npm test              # 60 pass, including the real cordis composition tests
+npm test              # 63 pass, including the real cordis composition tests
 
 # 3) Build the Harness from source and link this plugin the way it documents
 git clone https://github.com/deepseek-ai/deepseek-harness

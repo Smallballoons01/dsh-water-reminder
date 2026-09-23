@@ -102,18 +102,18 @@ profile 的 `cordis.patch.yml`（或插件的 `cordis.patch.yml` 默认值）：
 
 插件本身**零运行时依赖**——它依赖的 `@deepseek-ai/dsh-tools`、`dsh-llm`、`schemastery` 等都由 Harness 在运行时提供（peer dependency）。
 
-但请注意：**开发时对齐的那几个版本尚未发布到 npm**（npm 上 `@deepseek-ai/dsh-tools` 最新只到 `0.0.1-rc.1`，本插件对的是 `0.1.6-alpha.1`）。所以全新 clone 后无法直接 `npm install` 出可跑的测试环境。三个办法，任选：
+但请注意：**开发时对齐的那几个版本尚未发布到 npm**（npm 上 `@deepseek-ai/dsh-tools` 最新只到 `0.0.1-rc.1`，本插件对的是 `0.1.2-alpha.3`）。所以全新 clone 后无法直接 `npm install` 出可跑的测试环境。设置页与配置热重载需要 Harness >= `0.1.2-alpha.3` 的宿主；更老的宿主上插件仍按启动配置运行。三个办法，任选：
 
 ```sh
 # 1) 只跑不依赖 Harness 的部分（零安装，clone 后即可）
-npm test              # 35 通过 / 2 跳过，跳过项会说明原因
+npm test              # 38 通过 / 2 跳过，跳过项会说明原因
 
 # 2) 从本机已有的 Harness profile 复用依赖（最快，离线）
 mkdir -p node_modules/@deepseek-ai
-for p in cordis dsh-llm dsh-tools dsh-settings dsh-skill dsh-system-prompt schemastery; do
+for p in cordis cosmokit dsh-llm dsh-tools dsh-settings dsh-skill dsh-system-prompt schemastery; do
   ln -sfn "$HOME/.dsh/profiles/node_modules/@deepseek-ai/$p" "node_modules/@deepseek-ai/$p"
 done
-npm test              # 60 通过（含真实 cordis 组合集成测试）
+npm test              # 63 通过（含真实 cordis 组合集成测试）
 
 # 3) 从源码构建 Harness，再按它的说明链接本插件
 git clone https://github.com/deepseek-ai/deepseek-harness

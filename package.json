@@ -1,6 +1,6 @@
 {
   "name": "@dsh-plugin/water-reminder",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Hydration reminder for DeepSeek Harness: a randomized 40-60 minute nudge delivered as a native OS notification, an in-conversation agent reminder, a sidebar countdown panel, and an embedded hydration-coach skill",
   "keywords": [
