@@ -26,6 +26,7 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import z from '@deepseek-ai/schemastery'
+import { isVolatile } from '@deepseek-ai/cosmokit'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import {
@@ -77,28 +78,38 @@ const notifySchema = z.object({
 /** Schemastery configuration for the plugin. */
 export const Config = z.object({
   /** Whether the reminder loop runs at start-up. Overridable at runtime. */
-  enabled: z.boolean().default(true),
+  enabled: z.boolean().default(true).volatile(),
   /** Lower bound of the random reminder interval, in minutes. */
-  intervalMinMinutes: z.number().default(40),
+  intervalMinMinutes: z.number().default(40).volatile(),
   /** Upper bound of the random reminder interval, in minutes. */
-  intervalMaxMinutes: z.number().default(60),
+  intervalMaxMinutes: z.number().default(60).volatile(),
   /** Daily intake goal in milliliters. */
-  dailyGoalMl: z.number().default(2000),
+  dailyGoalMl: z.number().default(2000).volatile(),
   /** Milliliters recorded for one "I drank a cup" event. */
-  cupMl: z.number().default(250),
+  cupMl: z.number().default(250).volatile(),
   /** Minutes \`water_snooze\` defers by when no explicit delay is given. */
-  snoozeMinutes: z.number().default(5),
+  snoozeMinutes: z.number().default(5).volatile(),
   /** Local-time window in which reminders are held back. */
-  quietHours: quietSchema,
+  quietHours: quietSchema.volatile(),
   /** Delivery channels. */
-  notify: notifySchema,
+  notify: notifySchema.volatile(),
   /** Absolute path of the persisted state file. Defaults to \`$DSH_HOME/water-reminder.json\`. */
   stateFile: z.string(),
   /** Whether to expose a system-prompt section describing the reminder loop. */
-  promptSection: z.boolean().default(true),
+  promptSection: z.boolean().default(true).volatile(),
   /** Whether to register the embedded \`hydration-coach\` skill. */
-  skill: z.boolean().default(true),
+  skill: z.boolean().default(true).volatile(),
 })
+/**
+ * Resolve the boot-time config's volatile references once: volatile Config
+ * fields arrive as stable refs whose `.get()` follows hot reloads, and every
+ * read below wants one plain snapshot.
+ * @param config Validated plugin config.
+ */
+function unwrapVolatileConfig(config) {
+  return Object.fromEntries(Object.entries(config).map(([key, value]) => [key, isVolatile(value) ? value.get() : value]))
+}
+
 
 const PROMPT_SECTION = `Hydration reminders (water-reminder plugin):
 - A background loop reminds the user to drink water every 40-60 minutes (randomized) while this session is live. It arrives as a plugin message prefixed \`[water-reminder]\`.
@@ -195,7 +206,7 @@ export function apply(ctx, config) {
   // Normalize once at the boundary: the composition entry, the settings
   // document, and the schema defaults may each omit fields, so everything
   // below reads a complete object.
-  let current = normalizeConfig(config)
+  let current = normalizeConfig(unwrapVolatileConfig(config))
   let source = () => current
 
   const runtime = {
@@ -330,7 +341,7 @@ export function apply(ctx, config) {
       try {
         agent.inject(createUserMessage({
           content: [{ type: 'text', text }],
-          source: { kind: 'plugin', plugin: 'water-reminder' },
+          source: { kind: 'plugin:water-reminder' },
         }))
       } catch {
         // The agent may have been disposed between the check and this nudge.
@@ -706,15 +717,18 @@ export function apply(ctx, config) {
     }), 'water-reminder: /water/api routes')
   })
 
-  // Settings-driven configuration: the page's writes hot-reload into `current`,
-  // then the timer is rearmed so a band or quiet-hours change takes effect now.
+  // Settings-driven configuration (dsh >= 0.1.2-alpha.3): the page's writes
+  // persist as volatile Config fields; the document-updated event follows
+  // every accepted write, so `current` is re-read and the timer rearmed for a
+  // band or quiet-hours change to take effect now.
   ctx.inject(['settings'], (settingsCtx) => {
-    settingsCtx.settings.installSection(ctx, SETTINGS_NS, Config, config, {
-      setSource: (get) => { source = () => normalizeConfig(get()) },
-      onChange: () => {
-        current = source()
-        schedule()
-      },
+    ctx.on('settings/document-updated', (ns) => {
+      if (ns !== SETTINGS_NS) return
+      const served = settingsCtx.settings.describe().find((row) => row.ns === SETTINGS_NS)?.value
+      if (served === undefined) return
+      source = () => normalizeConfig(served)
+      current = source()
+      schedule()
     })
   })
 

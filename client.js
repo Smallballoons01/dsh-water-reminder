@@ -466,8 +466,31 @@ window.__ModuleLoader__.load({
     const QUIET_FIELDS = ['quietEnabled', 'quietFrom', 'quietTo']
     const CHANNEL_FIELDS = ['notifyOs', 'notifyAgent', 'notifySound']
 
+    // dsh >= 0.1.2-alpha.3 removed the browser `settingsScope` service; the
+    // shared settings provider now exposes `configForms`. Adapt the scoped
+    // face this page was written against (getSnapshot/set) onto it. The view
+    // is cached per underlying snapshot so React's getSnapshot stays
+    // reference-stable between changes.
+    function bindSettingsScope(ctx, namespace) {
+      const form = ctx.configForms.get(namespace)
+      let lastSnap = null
+      let view = null
+      return {
+        getSnapshot: () => {
+          const snap = form.getSnapshot()
+          if (snap !== lastSnap) {
+            lastSnap = snap
+            view = { status: snap.status, writable: snap.status === 'ready', value: snap.value }
+          }
+          return view
+        },
+        set: (path, value) => form.mutate([{ op: 'set', path: String(path).split('.'), value }]),
+        unset: (path) => form.mutate([{ op: 'unset', path: String(path).split('.') }]),
+      }
+    }
+
     function createSettingsPage(ctx) {
-      const scope = ctx.settingsScope.bind({ namespace: NS })
+      const scope = bindSettingsScope(ctx, NS)
       let staged = null
       const listeners = new Set()
       const emit = () => { for (const listener of listeners) listener() }
@@ -486,7 +509,6 @@ window.__ModuleLoader__.load({
           dailyGoalMl: value.dailyGoalMl ?? 2000,
           cupMl: value.cupMl ?? 250,
           snoozeMinutes: value.snoozeMinutes ?? 5,
-          quietEnabled: quiet.enabled === true,
           quietFrom: quiet.from ?? '22:00',
           quietTo: quiet.to ?? '08:00',
           notifyOs: notify.os !== false,
@@ -655,7 +677,7 @@ window.__ModuleLoader__.load({
       }, createSettingsCard(ctx)))
     }
 
-    exports.inject = ['slots', 'settingsScope']
+    exports.inject = ['slots', 'configForms']
     exports.apply = apply
     return module.exports
   },

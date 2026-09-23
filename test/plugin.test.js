@@ -60,6 +60,7 @@ function assertMatchesSchema(schema, value, path = 'value') {
 
 /** A fake host context that records registrations and answers every capability. */
 function harness(options = {}) {
+  harness.served = []
   const captured = {
     tools: [],
     sections: [],
@@ -70,7 +71,7 @@ function harness(options = {}) {
     settings: undefined,
   }
   const services = {
-    settings: { installSection: (...args) => { captured.settings = args; return () => {} } },
+    settings: { describe: () => harness.served },
     systemPrompt: { section: value => { captured.sections.push(value); return () => {} } },
     skills: { register: value => { captured.skills.push(value); return () => {} } },
     webServer: { register: value => { captured.routes.push(value); return () => {} } },
@@ -154,12 +155,17 @@ if (pluginModule === undefined) {
     }
   })
 
-  test('installs its settings section under the shared namespace', async (t) => {
-    const { captured } = await setup(t)
-    assert.notEqual(captured.settings, undefined)
-    assert.equal(captured.settings[1], SETTINGS_NS)
-    assert.equal(typeof captured.settings[2], 'function', 'the namespace needs a schema')
-    assert.equal(captured.settings[4].setSource instanceof Function, true)
+  test('follows settings writes through the document-updated event', async (t) => {
+    const { captured, byName } = await setup(t)
+    const listener = captured.events.find(([event]) => event === 'settings/document-updated')?.[1]
+    assert.equal(typeof listener, 'function', 'the plugin follows the settings document')
+
+    harness.served = [{ ns: SETTINGS_NS, value: { dailyGoalMl: 3000 } }]
+    listener(SETTINGS_NS)
+    assert.equal((await byName.water_status.execute({}, {})).goalMl, 3000)
+
+    listener('some-other-namespace')
+    assert.equal((await byName.water_status.execute({}, {})).goalMl, 3000, 'other namespaces do not reach the plugin')
   })
 
   test('registers the prompt section, the embedded skill, and the panel route', async (t) => {
@@ -177,7 +183,7 @@ if (pluginModule === undefined) {
     assert.equal(captured.routes[0].kind, 'prefix')
     assert.equal(captured.routes[0].path, '/water/api')
 
-    assert.deepEqual(captured.events.map(([event]) => event), ['agent/created'])
+    assert.deepEqual(captured.events.map(([event]) => event), ['agent/created', 'settings/document-updated'])
   })
 
   test('optional surfaces stay absent when switched off', async (t) => {
@@ -442,14 +448,15 @@ if (pluginModule === undefined) {
 
   test('the config schema resolves the documented defaults', () => {
     const resolved = Config({})
-    assert.equal(resolved.enabled, true)
-    assert.equal(resolved.intervalMinMinutes, 40)
-    assert.equal(resolved.intervalMaxMinutes, 60)
-    assert.equal(resolved.dailyGoalMl, 2000)
-    assert.equal(resolved.cupMl, 250)
-    assert.equal(resolved.notify.os, true)
-    assert.equal(resolved.quietHours.enabled, false)
-    assert.equal(resolved.promptSection, true)
-    assert.equal(resolved.skill, true)
+    // Volatile fields arrive as stable refs; `.get()` yields the snapshot.
+    assert.equal(resolved.enabled.get(), true)
+    assert.equal(resolved.intervalMinMinutes.get(), 40)
+    assert.equal(resolved.intervalMaxMinutes.get(), 60)
+    assert.equal(resolved.dailyGoalMl.get(), 2000)
+    assert.equal(resolved.cupMl.get(), 250)
+    assert.equal(resolved.notify.get().os, true)
+    assert.equal(resolved.quietHours.get().enabled, false)
+    assert.equal(resolved.promptSection.get(), true)
+    assert.equal(resolved.skill.get(), true)
   })
 }
