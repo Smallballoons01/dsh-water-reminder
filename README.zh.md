@@ -23,7 +23,7 @@
 dsh plugin --profile web add link:/path/to/water_reminder
 
 # 或者用打包产物
-pnpm pack && dsh plugin --profile web add ./dsh-plugin-water-reminder-0.1.0.tgz
+pnpm pack && dsh plugin --profile web add ./dsh-plugin-water-reminder-$(node -p "require('./package.json').version").tgz
 ```
 
 装完**重启 `dsh web`**：插件的定时器与工具在会话启动时挂载。同一个 profile 里不要保留两条 `water-reminder` 行——两条会各起一个定时器、各注册一次 `/water/api` 前缀路由，重复路由会让整棵插件树启动失败。

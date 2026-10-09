@@ -4,3 +4,5 @@ node_modules/
 # Local state written by a dev run that pointed DSH_HOME at the repo.
 water-reminder.json
 *.tmp
+.backup/
+pnpm-lock.yaml

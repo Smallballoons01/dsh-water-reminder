@@ -23,7 +23,7 @@ The irregularity is the point. A perfectly regular timer is what teaches people 
 dsh plugin --profile web add link:/path/to/water_reminder
 
 # or from a packed tarball
-pnpm pack && dsh plugin --profile web add ./dsh-plugin-water-reminder-0.1.0.tgz
+pnpm pack && dsh plugin --profile web add ./dsh-plugin-water-reminder-$(node -p "require('./package.json').version").tgz
 ```
 
 Then **restart `dsh web`**: the timer and the tools mount at session start. Never keep two `water-reminder` rows in one profile — each would start its own timer and register the `/water/api` prefix route, and the duplicate route makes the whole plugin tree fail to boot.
@@ -103,28 +103,42 @@ The skill covers which tool to call when, how to react to a reminder (one short 
 The plugin has **zero runtime dependencies** — `@deepseek-ai/dsh-tools`, `dsh-llm`, `schemastery` and
 friends are peer dependencies that the Harness supplies at runtime.
 
-Note, though, that **the versions this plugin is developed against are not published to npm** (npm's
-latest `@deepseek-ai/dsh-tools` is `0.0.1-rc.1`; this plugin targets `0.1.2-alpha.3`), so a fresh
-clone cannot `npm install` a working test environment. The settings page and config hot reload
-require a Harness >= `0.1.2-alpha.3` host; on older hosts the plugin still runs on its boot-time
-config. Pick one of three:
+The versions this plugin develops against are published to npm, but **not under npm's `latest`
+tag**: npm's `latest` for `@deepseek-ai/dsh-tools` is still the placeholder `0.0.1-rc.1`, while this
+plugin targets `0.2.1-alpha.1`. Install the exact versions from `devDependencies` rather than
+letting a resolver follow `latest`:
 
 ```sh
-# 1) Run the dependency-free part only — works immediately after cloning
-npm test              # 38 pass / 2 skip, and each skip says why
+pnpm install        # resolves the pinned devDependencies
+npm test            # 63 pass / 0 skip, including the real cordis composition tests
+```
 
-# 2) Reuse the packages from an existing local Harness profile (fastest, offline)
+If you prefer to reuse the packages from an existing local Harness profile (fastest, offline):
+
+```sh
 mkdir -p node_modules/@deepseek-ai
 for p in cordis cosmokit dsh-llm dsh-tools dsh-settings dsh-skill dsh-system-prompt schemastery; do
   ln -sfn "$HOME/.dsh/profiles/node_modules/@deepseek-ai/$p" "node_modules/@deepseek-ai/$p"
 done
-npm test              # 63 pass, including the real cordis composition tests
+npm test
+```
 
-# 3) Build the Harness from source and link this plugin the way it documents
+You can also build the Harness from source and link this plugin the way it documents:
+
+```sh
 git clone https://github.com/deepseek-ai/deepseek-harness
 ```
 
-Use 2 or 3 for the full suite; 1 is enough when you are only touching pure logic
+The settings page and config hot reload require a Harness >= `0.1.2-alpha.3` host; on older hosts the
+plugin still runs on its boot-time config.
+
+> **Message source kind.** Since dsh `0.2` the harness has no shared catch-all `kind: 'plugin'`
+> message source — each producer declares its own kind. This plugin injects under
+> `'water-reminder'`, declared in [`types/dsh-llm.d.ts`](types/dsh-llm.d.ts). A pure-JavaScript
+> plugin cannot use an inline `declare module` (that is TypeScript syntax, which Node rejects at parse
+> time), so the type-level merge lives in that separate file.
+
+Use the pinned install or the profile symlinks for the full suite
 (`hydration.js` / `notify.js`).
 
 ### Scripts

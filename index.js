@@ -45,6 +45,20 @@ import {
 import { buildNotificationCommand, NOTIFICATION_SOURCE } from './notify.js'
 import { SKILL_DESCRIPTION, SKILL_NAME, SKILL_WHEN_TO_USE, skillBody } from './skill.js'
 
+/**
+ * Producer attribution for the nudge this plugin injects into a live session.
+ *
+ * dsh 0.2 dropped the shared catch-all `kind: 'plugin'` source so consumers
+ * can switch on a producer and fall through the ones they do not handle. The
+ * runtime never validated the kind, so this only documents the contract; the
+ * type-level merge lives in `types/dsh-llm.d.ts`, which TypeScript reads and
+ * Node never loads.
+ * @typedef {{ kind: 'water-reminder' }} WaterReminderMessageSource
+ */
+
+/** Message source carried by every reminder this plugin injects. */
+export const REMINDER_MESSAGE_SOURCE = /** @type {WaterReminderMessageSource} */ ({ kind: 'water-reminder' })
+
 export const name = 'water-reminder'
 export const inject = ['tools']
 
@@ -341,7 +355,7 @@ export function apply(ctx, config) {
       try {
         agent.inject(createUserMessage({
           content: [{ type: 'text', text }],
-          source: { kind: 'plugin:water-reminder' },
+          source: REMINDER_MESSAGE_SOURCE,
         }))
       } catch {
         // The agent may have been disposed between the check and this nudge.
