@@ -1,6 +1,6 @@
 {
   "name": "@dsh-plugin/water-reminder",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "Hydration reminder for DeepSeek Harness: a randomized 40-60 minute nudge delivered as a native OS notification, an in-conversation agent reminder, a sidebar countdown panel, and an embedded hydration-coach skill",
   "keywords": [
@@ -64,13 +64,13 @@
     }
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "4.0.5-alpha.1",
-    "@deepseek-ai/dsh-llm": "0.2.1-alpha.1",
-    "@deepseek-ai/dsh-settings": "0.2.1-alpha.1",
-    "@deepseek-ai/dsh-skill": "0.2.1-alpha.1",
-    "@deepseek-ai/dsh-system-prompt": "0.2.1-alpha.1",
-    "@deepseek-ai/dsh-tools": "0.2.1-alpha.1",
-    "@deepseek-ai/schemastery": "3.18.5-alpha.1"
+    "@deepseek-ai/cordis": "4.0.5-alpha.2",
+    "@deepseek-ai/dsh-llm": "0.2.1-alpha.3",
+    "@deepseek-ai/dsh-settings": "0.2.1-alpha.3",
+    "@deepseek-ai/dsh-skill": "0.2.1-alpha.3",
+    "@deepseek-ai/dsh-system-prompt": "0.2.1-alpha.3",
+    "@deepseek-ai/dsh-tools": "0.2.1-alpha.3",
+    "@deepseek-ai/schemastery": "3.18.5-alpha.2"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "*",

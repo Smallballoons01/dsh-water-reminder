@@ -26,7 +26,9 @@ dsh plugin --profile web add link:/path/to/water_reminder
 pnpm pack && dsh plugin --profile web add ./dsh-plugin-water-reminder-$(node -p "require('./package.json').version").tgz
 ```
 
-Then **restart `dsh web`**: the timer and the tools mount at session start. Never keep two `water-reminder` rows in one profile — each would start its own timer and register the `/water/api` prefix route, and the duplicate route makes the whole plugin tree fail to boot.
+Then reload the harness. On DeepSeek Harness ≥ 0.2.1-alpha.3 with hot reload enabled, code updates to this plugin apply without a restart; a fresh install (and toggling the load-time switches `promptSection` / `skill`) still needs one — restart `dsh web`. Never keep two `water-reminder` rows in one profile — each would start its own timer and register the `/water/api` prefix route, and the duplicate route makes the whole plugin tree fail to boot.
+
+> Recreating a profile with `dsh … --from-default-profile` **replaces** that profile, including its plugins — re-add the plugin afterwards.
 
 ## Tools
 

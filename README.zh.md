@@ -26,7 +26,9 @@ dsh plugin --profile web add link:/path/to/water_reminder
 pnpm pack && dsh plugin --profile web add ./dsh-plugin-water-reminder-$(node -p "require('./package.json').version").tgz
 ```
 
-装完**重启 `dsh web`**：插件的定时器与工具在会话启动时挂载。同一个 profile 里不要保留两条 `water-reminder` 行——两条会各起一个定时器、各注册一次 `/water/api` 前缀路由，重复路由会让整棵插件树启动失败。
+然后重载 harness。DeepSeek Harness ≥ 0.2.1-alpha.3 且开启热重载时，插件代码更新无需重启即可生效；首次安装、以及切换只在加载时判断的开关（`promptSection`、`skill`）仍需重启 `dsh web`。同一个 profile 里不要保留两条 `water-reminder` 行——两条会各起一个定时器、各注册一次 `/water/api` 前缀路由，重复路由会让整棵插件树启动失败。
+
+> 用 `dsh … --from-default-profile` 重建 profile 会**整体替换**该 profile（含插件列表），之后需要重新添加本插件。
 
 ## 工具
 
