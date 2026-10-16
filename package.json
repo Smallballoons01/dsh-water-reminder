@@ -1,6 +1,6 @@
 {
   "name": "@dsh-plugin/water-reminder",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "description": "Hydration reminder for DeepSeek Harness: a randomized 40-60 minute nudge delivered as a native OS notification, an in-conversation agent reminder, a sidebar countdown panel, and an embedded hydration-coach skill",
   "keywords": [
@@ -51,7 +51,7 @@
     "test": "node --test",
     "skill": "node scripts/generate-skill.mjs",
     "skill:check": "node scripts/generate-skill.mjs --check",
-    "test:browser": "node test/browser-smoke.mjs"
+    "test:browser": "node scripts/browser-smoke.mjs"
   },
   "dsh": {
     "bundle": {
