@@ -35,5 +35,18 @@ jobs:
       - name: 单元与集成测试
         run: npm test
 
+      # Some layers of the suite skip themselves when the Harness packages do
+      # not resolve. A silent skip is the failure mode this guards: it lets a
+      # green run prove nothing. The packages are pinned in devDependencies, so
+      # on CI there is no legitimate reason for a test to skip.
+      - name: 断言没有测试被静默跳过
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee /tmp/tap.txt
+          if grep -qE '^# skipped [1-9]' /tmp/tap.txt; then
+            echo "::error::some tests skipped — the harness packages did not resolve"
+            exit 1
+          fi
+
       - name: 技能文件一致性
         run: npm run skill:check

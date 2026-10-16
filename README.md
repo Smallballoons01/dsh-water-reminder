@@ -107,13 +107,19 @@ friends are peer dependencies that the Harness supplies at runtime.
 
 The versions this plugin develops against are published to npm, but **not under npm's `latest`
 tag**: npm's `latest` for `@deepseek-ai/dsh-tools` is still the placeholder `0.0.1-rc.1`, while this
-plugin targets `0.2.1-alpha.1`. Install the exact versions from `devDependencies` rather than
-letting a resolver follow `latest`:
+plugin targets `0.2.1-alpha.4` (reached through the `alpha` dist-tag). Install the exact versions
+from `devDependencies` rather than letting a resolver follow `latest`:
 
 ```sh
 pnpm install        # resolves the pinned devDependencies
 npm test            # 63 pass / 0 skip, including the real cordis composition tests
-```
+
+> **Companion versions.** `0.2.1-alpha.4` is paired with `@deepseek-ai/cordis` `4.0.5-alpha.2` and
+> `@deepseek-ai/schemastery` `3.18.5-alpha.2`. Those two are *not* on their own `latest` channel
+> either, so pin all three together. Unlike `alpha.1`, the `alpha.4` release has no dedicated
+> `dsh-0-2-1-*` dist-tag — the exact version strings in `devDependencies` are the only source of
+> truth.
+
 
 If you prefer to reuse the packages from an existing local Harness profile (fastest, offline):
 

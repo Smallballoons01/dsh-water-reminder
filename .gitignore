@@ -6,3 +6,8 @@ water-reminder.json
 *.tmp
 .backup/
 pnpm-lock.yaml
+
+# pnpm 11 writes this when a pinned version is younger than its
+# minimum-release-age policy. It records local install decisions, not a
+# property of the package, so it stays out of the repo.
+pnpm-workspace.yaml

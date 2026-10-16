@@ -104,11 +104,11 @@ profile 的 `cordis.patch.yml`（或插件的 `cordis.patch.yml` 默认值）：
 
 插件本身**零运行时依赖**——它依赖的 `@deepseek-ai/dsh-tools`、`dsh-llm`、`schemastery` 等都由 Harness 在运行时提供（peer dependency）。
 
-但请注意：**开发时对齐的那几个版本尚未发布到 npm**（npm 上 `@deepseek-ai/dsh-tools` 最新只到 `0.0.1-rc.1`，本插件对的是 `0.1.2-alpha.3`）。所以全新 clone 后无法直接 `npm install` 出可跑的测试环境。设置页与配置热重载需要 Harness >= `0.1.2-alpha.3` 的宿主；更老的宿主上插件仍按启动配置运行。三个办法，任选：
+但请注意：**开发时对齐的版本不在 npm 的 `latest` 通道上**（npm 上 `@deepseek-ai/dsh-tools` 的 `latest` 仍只到占位的 `0.0.1-rc.1`，本插件对的是 **`0.2.1-alpha.4`**，要经 `alpha` 标签解析）。所以别让解析器跟着 `latest` 走，按 `devDependencies` 里钉死的版本装。另外 `0.2.1-alpha.4` 的配套版本是 `@deepseek-ai/cordis` `4.0.5-alpha.2` 与 `@deepseek-ai/schemastery` `3.18.5-alpha.2`，这三个要一起钉；`alpha.4` 没有像 `alpha.1` 那样的 `dsh-0-2-1-*` 专属 dist-tag，版本号本身是唯一真相。设置页与配置热重载需要 Harness >= `0.1.2-alpha.3` 的宿主；更老的宿主上插件仍按启动配置运行。三个办法，任选：
 
 ```sh
 # 1) 只跑不依赖 Harness 的部分（零安装，clone 后即可）
-npm test              # 38 通过 / 2 跳过，跳过项会说明原因
+npm test              # 依赖层会跳过并说明原因
 
 # 2) 从本机已有的 Harness profile 复用依赖（最快，离线）
 mkdir -p node_modules/@deepseek-ai
@@ -126,7 +126,7 @@ git clone https://github.com/deepseek-ai/deepseek-harness
 ### 脚本
 
 ```sh
-npm test              # 有依赖：60 个测试；无依赖：35 通过 + 2 跳过
+npm test              # 有依赖：63 个测试全过；无依赖：仅纯逻辑层通过，依赖层跳过并打印原因
 npm run skill         # 从 skill.js 重新生成 SKILL.md
 npm run skill:check   # 校验 SKILL.md 是否已同步
 ```
