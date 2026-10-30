@@ -107,25 +107,31 @@ friends are peer dependencies that the Harness supplies at runtime.
 
 The versions this plugin develops against are published to npm, but **not under npm's `latest`
 tag**: npm's `latest` for `@deepseek-ai/dsh-tools` is still the placeholder `0.0.1-rc.1`, while this
-plugin targets `0.2.1-alpha.4` (reached through the `alpha` dist-tag). Install the exact versions
+plugin targets `0.2.2-alpha.2` (reached through the `alpha` dist-tag). Install the exact versions
 from `devDependencies` rather than letting a resolver follow `latest`:
 
 ```sh
 pnpm install        # resolves the pinned devDependencies
 npm test            # 63 pass / 0 skip, including the real cordis composition tests
+```
 
-> **Companion versions.** `0.2.1-alpha.4` is paired with `@deepseek-ai/cordis` `4.0.5-alpha.2` and
-> `@deepseek-ai/schemastery` `3.18.5-alpha.2`. Those two are *not* on their own `latest` channel
-> either, so pin all three together. Unlike `alpha.1`, the `alpha.4` release has no dedicated
-> `dsh-0-2-1-*` dist-tag — the exact version strings in `devDependencies` are the only source of
-> truth.
+> **Companion versions.** `0.2.2-alpha.2` is paired with `@deepseek-ai/cordis` `4.0.6-alpha.1` and
+> `@deepseek-ai/schemastery` `3.18.6-alpha.1`. Those two are *not* on their own `latest` channel
+> either, so pin all three together. The `alpha.2` release has no dedicated `dsh-0-2-2-*` dist-tag —
+> the exact version strings in `devDependencies` are the only source of truth.
 
+> **Tool executor.** Since `0.2.2-alpha.2` the tool registry no longer owns the model-facing tool
+> descriptions: assembling the system prompt asks the registry for its executor and throws
+> `TOOL_EXECUTOR_UNAVAILABLE` when the composition has none. A real deployment gets one from
+> `@deepseek-ai/dsh-base`; any composition you build by hand has to mount
+> `@deepseek-ai/dsh-tool-executor-native` after the registry, which is what
+> `test/integration.test.js` does.
 
 If you prefer to reuse the packages from an existing local Harness profile (fastest, offline):
 
 ```sh
 mkdir -p node_modules/@deepseek-ai
-for p in cordis cosmokit dsh-llm dsh-tools dsh-settings dsh-skill dsh-system-prompt schemastery; do
+for p in cordis cosmokit dsh-llm dsh-tools dsh-settings dsh-skill dsh-system-prompt dsh-tool-executor-native schemastery; do
   ln -sfn "$HOME/.dsh/profiles/node_modules/@deepseek-ai/$p" "node_modules/@deepseek-ai/$p"
 done
 npm test

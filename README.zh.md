@@ -104,7 +104,11 @@ profile 的 `cordis.patch.yml`（或插件的 `cordis.patch.yml` 默认值）：
 
 插件本身**零运行时依赖**——它依赖的 `@deepseek-ai/dsh-tools`、`dsh-llm`、`schemastery` 等都由 Harness 在运行时提供（peer dependency）。
 
-但请注意：**开发时对齐的版本不在 npm 的 `latest` 通道上**（npm 上 `@deepseek-ai/dsh-tools` 的 `latest` 仍只到占位的 `0.0.1-rc.1`，本插件对的是 **`0.2.1-alpha.4`**，要经 `alpha` 标签解析）。所以别让解析器跟着 `latest` 走，按 `devDependencies` 里钉死的版本装。另外 `0.2.1-alpha.4` 的配套版本是 `@deepseek-ai/cordis` `4.0.5-alpha.2` 与 `@deepseek-ai/schemastery` `3.18.5-alpha.2`，这三个要一起钉；`alpha.4` 没有像 `alpha.1` 那样的 `dsh-0-2-1-*` 专属 dist-tag，版本号本身是唯一真相。设置页与配置热重载需要 Harness >= `0.1.2-alpha.3` 的宿主；更老的宿主上插件仍按启动配置运行。三个办法，任选：
+但请注意：**开发时对齐的版本不在 npm 的 `latest` 通道上**（npm 上 `@deepseek-ai/dsh-tools` 的 `latest` 仍只到占位的 `0.0.1-rc.1`，本插件对的是 **`0.2.2-alpha.2`**，要经 `alpha` 标签解析）。所以别让解析器跟着 `latest` 走，按 `devDependencies` 里钉死的版本装。另外 `0.2.2-alpha.2` 的配套版本是 `@deepseek-ai/cordis` `4.0.6-alpha.1` 与 `@deepseek-ai/schemastery` `3.18.6-alpha.1`，这三个要一起钉；`alpha.2` 也没有 `dsh-0-2-2-*` 专属 dist-tag，版本号本身是唯一真相。
+
+还有一处容易踩的：**从 `0.2.2-alpha.2` 起，工具描述的归属从注册表挪到了 executor** —— 组装系统提示时会向注册表要 executor，组合里没有就抛 `TOOL_EXECUTOR_UNAVAILABLE`。生产部署由 `@deepseek-ai/dsh-base` 提供；自己手搓组合（比如集成测试）必须在内置工具注册表之后挂上 `@deepseek-ai/dsh-tool-executor-native`，`test/integration.test.js` 就是这么做的。
+
+设置页与配置热重载需要 Harness >= `0.1.2-alpha.3` 的宿主；更老的宿主上插件仍按启动配置运行。三个办法，任选：
 
 ```sh
 # 1) 只跑不依赖 Harness 的部分（零安装，clone 后即可）
@@ -112,7 +116,7 @@ npm test              # 依赖层会跳过并说明原因
 
 # 2) 从本机已有的 Harness profile 复用依赖（最快，离线）
 mkdir -p node_modules/@deepseek-ai
-for p in cordis cosmokit dsh-llm dsh-tools dsh-settings dsh-skill dsh-system-prompt schemastery; do
+for p in cordis cosmokit dsh-llm dsh-tools dsh-settings dsh-skill dsh-system-prompt dsh-tool-executor-native schemastery; do
   ln -sfn "$HOME/.dsh/profiles/node_modules/@deepseek-ai/$p" "node_modules/@deepseek-ai/$p"
 done
 npm test              # 63 通过（含真实 cordis 组合集成测试）

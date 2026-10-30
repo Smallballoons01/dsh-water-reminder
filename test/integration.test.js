@@ -24,14 +24,15 @@ import { join } from 'node:path'
  * dependency produces one clear skip instead of an import crash. See
  * `README -> Prerequisites`.
  */
-const SKIP_REASON = 'requires the DeepSeek Harness packages (@deepseek-ai/cordis, dsh-tools, dsh-skill, dsh-system-prompt); see README -> Prerequisites'
+const SKIP_REASON = 'requires the DeepSeek Harness packages (@deepseek-ai/cordis, dsh-tools, dsh-skill, dsh-system-prompt, dsh-tool-executor-native); see README -> Prerequisites'
 const deps = await (async () => {
   try {
-    const [cordis, tools, skill, systemPrompt, waterReminder, skillModule] = await Promise.all([
+    const [cordis, tools, skill, systemPrompt, nativeExecutor, waterReminder, skillModule] = await Promise.all([
       import('@deepseek-ai/cordis'),
       import('@deepseek-ai/dsh-tools'),
       import('@deepseek-ai/dsh-skill'),
       import('@deepseek-ai/dsh-system-prompt'),
+      import('@deepseek-ai/dsh-tool-executor-native'),
       import('../index.js'),
       import('../skill.js'),
     ])
@@ -40,6 +41,7 @@ const deps = await (async () => {
       ToolRuntime: tools.default,
       SkillRegistry: skill.default,
       SystemPrompt: systemPrompt.default,
+      NativeToolExecutor: nativeExecutor,
       renderPrompt: systemPrompt.renderPrompt,
       waterReminder,
       SKILL_NAME: skillModule.SKILL_NAME,
@@ -65,6 +67,11 @@ if (deps.error !== undefined) {
     await ctx.plugin(SystemPrompt)
     // ToolRuntime injects systemPrompt, so it must be loaded after it.
     await ctx.plugin(ToolRuntime)
+    // Since 0.2.2-alpha.2 the tool registry no longer owns model-facing tool
+    // descriptions: assembling the system prompt asks it for its executor and
+    // throws TOOL_EXECUTOR_UNAVAILABLE when the composition has none. A real
+    // deployment gets one from dsh-base; the test composition must mount it.
+    await ctx.plugin(deps.NativeToolExecutor)
     await ctx.plugin(SkillRegistry)
     const fiber = await ctx.plugin(waterReminder, { stateFile: join(directory, 'state.json'), ...config })
     t.after(async () => {
@@ -147,6 +154,7 @@ if (deps.error !== undefined) {
     const ctx = new Context()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(deps.NativeToolExecutor)
     await ctx.plugin(SkillRegistry)
     const fiber = await ctx.plugin(waterReminder, { stateFile: join(directory, 'state.json') })
 
